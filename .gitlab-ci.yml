@@ -1,0 +1,71 @@
+# GitLab CI/CD pipeline: lint -> test -> build -> push
+# Runs on every push. The Docker image is pushed to the GitLab Container
+# Registry, which is enabled by default for every GitLab project.
+
+stages:
+  - lint
+  - test
+  - build
+  - push
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  IMAGE_TAG: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  IMAGE_LATEST: "$CI_REGISTRY_IMAGE:latest"
+
+cache:
+  paths:
+    - .cache/pip
+
+# --- Lint stage: catches style issues / obvious bugs early ---
+lint:
+  stage: lint
+  image: python:3.12-slim
+  before_script:
+    - pip install -r requirements-dev.txt
+  script:
+    - flake8 app tests --max-line-length=100
+
+# --- Test stage: runs the unit tests ---
+test:
+  stage: test
+  image: python:3.12-slim
+  before_script:
+    - pip install -r requirements-dev.txt
+  script:
+    - pytest -v
+
+# --- Build stage: builds the Docker image using Docker-in-Docker ---
+build:
+  stage: build
+  image: docker:27
+  services:
+    - docker:27-dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  script:
+    - docker build -t "$IMAGE_TAG" .
+    - docker save "$IMAGE_TAG" -o image.tar
+  artifacts:
+    paths:
+      - image.tar
+    expire_in: 1 hour
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# --- Push stage: pushes the built image to the GitLab Container Registry ---
+push:
+  stage: push
+  image: docker:27
+  services:
+    - docker:27-dind
+  needs: ["build"]
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  script:
+    - docker load -i image.tar
+    - docker push "$IMAGE_TAG"
+    - docker tag "$IMAGE_TAG" "$IMAGE_LATEST"
+    - docker push "$IMAGE_LATEST"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
