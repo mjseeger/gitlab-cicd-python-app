@@ -1,6 +1,6 @@
 # CI/CD Pipeline with GitLab CI — Python Flask API
 
-> **Live pipeline:** https://gitlab.com/Personal-group/gitlab-cicd-python-app
+> **Live pipeline:** https://gitlab.com/personal-group4185333/gitlab-cicd-python-app.git
 > The repository is mirrored to GitHub, but the pipeline runs on GitLab CI.
 
 A small Flask API used as a hands-on portfolio project to demonstrate a **complete CI/CD pipeline with GitLab CI**: linting, automated testing, Docker image build, and publishing to the GitLab Container Registry.
