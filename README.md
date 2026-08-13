@@ -1,5 +1,8 @@
 # CI/CD Pipeline with GitLab CI — Python Flask API
 
+> **Live pipeline:** https://gitlab.com/Personal-group/gitlab-cicd-python-app
+> The repository is mirrored to GitHub, but the pipeline runs on GitLab CI.
+
 A small Flask API used as a hands-on portfolio project to demonstrate a **complete CI/CD pipeline with GitLab CI**: linting, automated testing, Docker image build, and publishing to the GitLab Container Registry.
 
 ## What this demonstrates
@@ -26,6 +29,17 @@ push to GitLab
 ```
 
 `build` and `push` only run on the `main` branch, so feature branches only go through lint + test.
+
+## Pipeline in action
+
+All four stages passing on GitLab CI:
+
+![Pipeline](docs/pipeline.webp)
+
+The `push` stage publishes the image to the project's Container Registry, tagged
+with both `latest` and the short commit SHA:
+
+![Container Registry](docs/container-reg.webp)
 
 ## Project structure
 
@@ -75,7 +89,7 @@ docker build -t task-api .
 docker run -p 5000:5000 task-api
 ```
 
-## Setting up the pipeline on GitLab
+## Reproducing this setup
 
 1. Push this project to a new GitLab repository.
 2. GitLab automatically provides a Container Registry per project — no extra setup needed.
